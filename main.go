@@ -2,15 +2,23 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/grafov/m3u8"
 )
+
+const name = "hls2mp3"
+
+const version = "0.0.0"
+
+var revision = "HEAD"
 
 func fetchM3U8(url string) ([]string, int, error) {
 	resp, err := http.Get(url)
@@ -112,6 +120,15 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var ver bool
+	flag.BoolVar(&ver, "version", false, "show version")
+	flag.Parse()
+
+	if ver {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+
 	http.HandleFunc("/audio", serveMP3)
 	http.ListenAndServe(":8080", nil)
 }
