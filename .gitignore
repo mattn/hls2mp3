@@ -1,0 +1,9 @@
+secret.yaml
+k8s
+*.sh
+*.cmd
+*.bat
+hls2mp3
+hls2mp3.exe
+backup
+test.json
