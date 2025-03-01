@@ -63,7 +63,7 @@ func fetchM3U8(url string) ([]segment, error) {
 func serveMP3(w http.ResponseWriter, r *http.Request) {
 	hlsURL := r.URL.Query().Get("url")
 
-	q := make(chan segment)
+	q := make(chan segment, 10)
 
 	go func() {
 		defer close(q)
@@ -83,6 +83,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 			case <-r.Context().Done():
 				return
 			case <-time.NewTimer(time.Duration(duration) * time.Second).C:
+				log.Println("break")
 			}
 		}
 	}()
