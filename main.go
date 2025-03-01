@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -51,6 +52,7 @@ func fetchM3U8(url string) ([]string, int, error) {
 		}
 		return tsUrls, duration, nil
 	}
+
 	return nil, 0, fmt.Errorf("invalid M3U8 format")
 }
 
@@ -70,6 +72,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 			for _, tsURL := range tsURLs {
 				q <- tsURL
 			}
+			log.Println("sleep", duration)
 			select {
 			case <-r.Context().Done():
 				return
@@ -88,6 +91,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			break
 		}
+		log.Println("serve", tsURL)
 
 		var mp3Data bytes.Buffer
 		resp, err := http.Get(tsURL)
