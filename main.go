@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"strings"
 	"time"
@@ -40,6 +39,19 @@ func fetchM3U8(url string) ([]segment, error) {
 	if listType == m3u8.MEDIA {
 		mediaPlaylist := playlist.(*m3u8.MediaPlaylist)
 		var segments []segment
+
+		if mediaPlaylist.Map != nil {
+			tsURL := mediaPlaylist.Map.URI
+			if !strings.HasPrefix(tsURL, "http") {
+				baseURL := url[:strings.LastIndex(url, "/")+1]
+				tsURL = baseURL + tsURL
+			}
+			segments = append(segments, segment{
+				tsURL:    tsURL,
+				duration: 0,
+			})
+		}
+
 		for _, s := range mediaPlaylist.Segments {
 			if s == nil {
 				continue
@@ -89,10 +101,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	w.Header().Set("Content-Type", "audio/mpeg")
-
 	flusher, _ := w.(http.Flusher)
-	cw := httputil.NewChunkedWriter(w)
-	defer cw.Close()
 
 	for {
 		s, ok := <-q
@@ -117,7 +126,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 
 		for i := range len(data) {
 			if data[i] == 0xFF && (data[i+1]&0xF0) == 0xF0 {
-				_, err = cw.Write(data[i:])
+				_, err = w.Write(data[i:])
 				if err != nil {
 					http.Error(w, "Failed to write MP3", http.StatusInternalServerError)
 				} else {
