@@ -1,9 +1,11 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -24,6 +26,17 @@ type segment struct {
 	duration float64
 }
 
+//go:embed static
+var static embed.FS
+
+func normalizeURL(url1, url2 string) string {
+	if !strings.HasPrefix(url2, "http") {
+		baseURL := url1[:strings.LastIndex(url1, "/")+1]
+		url2 = baseURL + url2
+	}
+	return url2
+}
+
 func fetchM3U8(url string) ([]segment, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -41,28 +54,17 @@ func fetchM3U8(url string) ([]segment, error) {
 		var segments []segment
 
 		if mediaPlaylist.Map != nil {
-			tsURL := mediaPlaylist.Map.URI
-			if !strings.HasPrefix(tsURL, "http") {
-				baseURL := url[:strings.LastIndex(url, "/")+1]
-				tsURL = baseURL + tsURL
-			}
 			segments = append(segments, segment{
-				tsURL:    tsURL,
+				tsURL:    normalizeURL(url, mediaPlaylist.Map.URI),
 				duration: 0,
 			})
 		}
-
 		for _, s := range mediaPlaylist.Segments {
 			if s == nil {
 				continue
 			}
-			tsURL := s.URI
-			if !strings.HasPrefix(tsURL, "http") {
-				baseURL := url[:strings.LastIndex(url, "/")+1]
-				tsURL = baseURL + tsURL
-			}
 			segments = append(segments, segment{
-				tsURL:    tsURL,
+				tsURL:    normalizeURL(url, s.URI),
 				duration: s.Duration,
 			})
 		}
@@ -154,5 +156,7 @@ func main() {
 	}
 
 	http.HandleFunc("/audio", serveMP3)
+	sub, _ := fs.Sub(static, "static")
+	http.Handle("/", http.FileServer(http.FS(sub)))
 	http.ListenAndServe(":8080", nil)
 }
