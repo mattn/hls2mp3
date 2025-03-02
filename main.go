@@ -22,7 +22,7 @@ var revision = "HEAD"
 
 type segment struct {
 	tsURL    string
-	duration int
+	duration float64
 }
 
 func fetchM3U8(url string) ([]segment, error) {
@@ -51,7 +51,7 @@ func fetchM3U8(url string) ([]segment, error) {
 			}
 			segments = append(segments, segment{
 				tsURL:    tsURL,
-				duration: int(s.Duration),
+				duration: s.Duration,
 			})
 		}
 		return segments, nil
@@ -73,7 +73,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Failed to fetch M3U8", http.StatusInternalServerError)
 				return
 			}
-			duration := 0
+			duration := float64(0)
 			for _, s := range segments {
 				q <- s
 				duration += s.duration
@@ -82,7 +82,7 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 			select {
 			case <-r.Context().Done():
 				return
-			case <-time.NewTimer(time.Duration(duration) * time.Second).C:
+			case <-time.NewTimer(time.Duration(duration * float64(time.Second))).C:
 				log.Println("break")
 			}
 		}
