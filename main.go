@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -69,9 +70,18 @@ func fetchM3U8(url string) ([]segment, error) {
 			})
 		}
 		return segments, nil
+	} else if listType == m3u8.MASTER {
+		masterPlaylist := playlist.(*m3u8.MasterPlaylist)
+		for _, s := range masterPlaylist.Variants {
+			if s == nil {
+				continue
+			}
+			return fetchM3U8(normalizeURL(url, s.URI))
+		}
+		return nil, errors.New("M3U8 not found")
 	}
 
-	return nil, fmt.Errorf("invalid M3U8 format")
+	return nil, errors.New("invalid M3U8 format")
 }
 
 func serveMP3(w http.ResponseWriter, r *http.Request) {

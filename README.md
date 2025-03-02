@@ -14,6 +14,12 @@ git install github.com/mattn/hls2mp3@latest
 $ ./hls2mp3
 ```
 
+This server makes http audio stream via hls streams
+
+```
+https://my-server.com:8080/audio?url=https://example.com/audio.m3u8
+```
+
 ## License
 
 MIT
