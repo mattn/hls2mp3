@@ -5,7 +5,7 @@ hls2mp3 is a proxy server that converts HLS streams to audio stream.
 ## Installation
 
 ```sh
-git install github.com/mattn/hls2mp3@latest
+go install github.com/mattn/hls2mp3@latest
 ```
 
 ## Usage
