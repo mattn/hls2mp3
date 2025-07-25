@@ -140,7 +140,8 @@ func serveMP3(w http.ResponseWriter, r *http.Request) {
 			if data[i] == 0xFF && (data[i+1]&0xF0) == 0xF0 {
 				_, err = w.Write(data[i:])
 				if err != nil {
-					http.Error(w, "Failed to write MP3", http.StatusInternalServerError)
+					log.Println(err)
+					return
 				} else {
 					flusher.Flush()
 				}
