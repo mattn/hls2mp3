@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -32,8 +33,15 @@ var static embed.FS
 
 func normalizeURL(url1, url2 string) string {
 	if !strings.HasPrefix(url2, "http") {
-		baseURL := url1[:strings.LastIndex(url1, "/")+1]
-		url2 = baseURL + url2
+		if strings.HasPrefix(url2, "/") {
+			if u, err := url.Parse(url1); err == nil {
+				u.Path = url2
+				url2 = u.String()
+			}
+		} else {
+			baseURL := url1[:strings.LastIndex(url1, "/")+1]
+			url2 = baseURL + url2
+		}
 	}
 	return url2
 }
